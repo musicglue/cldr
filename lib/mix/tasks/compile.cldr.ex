@@ -176,7 +176,7 @@ defmodule Mix.Tasks.Compile.Cldr do
   defp callers(dep) do
     try do
       Mix.Dep.in_dependency(dep, fn _module ->
-       calls()
+        calls()
         |> Enum.filter(&compile_module?/1)
         |> Enum.map(fn callee -> {dep.app, callee} end)
       end)
@@ -275,7 +275,16 @@ defmodule Mix.Tasks.Compile.Cldr do
   end
 
   def create_manifest(locales \\ []) do
-    File.write!(manifest(), :erlang.term_to_binary(locales))
+    manifest()
+    |> Path.dirname()
+    |> File.mkdir_p()
+    |> case do
+      :ok ->
+        File.write!(manifest(), :erlang.term_to_binary(locales))
+
+      {:error, _} ->
+        raise RuntimeError
+    end
   end
 
   def configured_locales do
